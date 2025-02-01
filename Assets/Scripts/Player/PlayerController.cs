@@ -3,11 +3,18 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    InputHandler _inputHandler;
     [SerializeField] float _moveSpeed = 2f;
+    [SerializeField] PlayerRole _role = PlayerRole.CREWMATE;
+
+    public PlayerRole Role => _role;
+
+    InputHandler _inputHandler;
     SpriteRenderer _spriteRenderer;
     bool _isFacingLeft;
+
     public static bool _isDead;
+
+    public void SetRole(PlayerRole role) => _role = role;
 
     private void Awake()
     {
@@ -44,4 +51,9 @@ public class PlayerController : MonoBehaviour
         }
         _spriteRenderer.flipX = _isFacingLeft;
     }
+}
+
+public enum PlayerRole
+{
+    CREWMATE, IMPOSTOR
 }

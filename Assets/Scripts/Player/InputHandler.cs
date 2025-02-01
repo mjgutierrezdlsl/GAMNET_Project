@@ -9,6 +9,7 @@ public class InputHandler : MonoBehaviour
 
     public delegate void OnKeyPressed();
     public event OnKeyPressed OnAttackPress, OnDeadPress;
+
     private void Update()
     {
         _direction = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).normalized;
