@@ -8,7 +8,7 @@ public class InputHandler : MonoBehaviour
     public Vector2 Direction => _direction;
 
     public delegate void OnKeyPressed();
-    public event OnKeyPressed OnAttackPress, OnDeadPress;
+    public event OnKeyPressed OnAttackPress;
 
     private void Update()
     {
@@ -17,11 +17,6 @@ public class InputHandler : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.E))
         {
             OnAttackPress?.Invoke();
-        }
-
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            OnDeadPress?.Invoke();
         }
     }
 }

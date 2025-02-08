@@ -5,27 +5,30 @@ public class AnimationHandler : MonoBehaviour
 {
     Animator _animator;
     InputHandler _inputHandler;
+    PlayerController _playerController;
+
     private void Awake()
     {
         _animator = GetComponent<Animator>();
         _inputHandler = GetComponent<InputHandler>();
+        _playerController = GetComponent<PlayerController>();
     }
 
     private void OnEnable()
     {
         _inputHandler.OnAttackPress += AttackPressed;
-        _inputHandler.OnDeadPress += DeadPressed;
+        _playerController.OnDeath += DeadPressed;
     }
 
     private void OnDisable()
     {
         _inputHandler.OnAttackPress -= AttackPressed;
-        _inputHandler.OnDeadPress -= DeadPressed;
+        _playerController.OnDeath -= DeadPressed;
     }
 
     private void AttackPressed()
     {
-        if (PlayerController._isDead) return;
+        if (_playerController.IsDead) return;
         _animator.SetTrigger("attack");
     }
 
@@ -36,7 +39,7 @@ public class AnimationHandler : MonoBehaviour
 
     private void Update()
     {
-        if (PlayerController._isDead) return;
+        if (_playerController.IsDead) return;
         _animator.SetBool("isMoving", _inputHandler.Direction != Vector2.zero);
     }
 }

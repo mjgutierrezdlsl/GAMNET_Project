@@ -5,6 +5,7 @@ public class PlayerController : MonoBehaviour
 {
     [SerializeField] float _moveSpeed = 2f;
     [SerializeField] PlayerRole _role = PlayerRole.CREWMATE;
+    [SerializeField] float _detectRadius = 1.5f;
 
     public PlayerRole Role => _role;
 
@@ -12,7 +13,26 @@ public class PlayerController : MonoBehaviour
     SpriteRenderer _spriteRenderer;
     bool _isFacingLeft;
 
-    public static bool _isDead;
+    PlayerController _playerInRange;
+
+    private bool _isDead;
+    public bool IsDead
+    {
+        get => _isDead;
+        set
+        {
+            _isDead = value;
+            if (_isDead)
+            {
+                OnDeath?.Invoke();
+            }
+        }
+    }
+
+    public delegate void PlayerEvent();
+    public event PlayerEvent OnDeath;
+
+    public event Action<PlayerController> PlayerCorpseFound;
 
     public void SetRole(PlayerRole role) => _role = role;
 
@@ -23,16 +43,32 @@ public class PlayerController : MonoBehaviour
     }
     private void OnEnable()
     {
-        _inputHandler.OnDeadPress += DeadPressed;
+        _inputHandler.OnAttackPress += AttackPressed;
     }
     private void OnDisable()
     {
-        _inputHandler.OnDeadPress -= DeadPressed;
+        _inputHandler.OnAttackPress -= AttackPressed;
     }
 
-    private void DeadPressed()
+    private void AttackPressed()
     {
-        _isDead = true;
+        if (!_playerInRange) { return; }
+        if (Role == PlayerRole.IMPOSTOR)
+        {
+            if (_playerInRange.Role != PlayerRole.CREWMATE) { return; }
+            _playerInRange.KillPlayer();
+        }
+        else if (Role == PlayerRole.CREWMATE)
+        {
+            if (!_playerInRange.IsDead) { return; }
+            PlayerCorpseFound?.Invoke(_playerInRange);
+        }
+    }
+
+    public void KillPlayer()
+    {
+        GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Static;
+        IsDead = true;
     }
 
     private void Update()
@@ -50,6 +86,26 @@ public class PlayerController : MonoBehaviour
             _isFacingLeft = false;
         }
         _spriteRenderer.flipX = _isFacingLeft;
+
+        var colliders = Physics2D.OverlapCircleAll(transform.position, _detectRadius);
+        foreach (var collider in colliders)
+        {
+            if (collider.CompareTag("Player") && collider.gameObject != this.gameObject)
+            {
+                print(collider.name);
+                _playerInRange = collider.GetComponent<PlayerController>();
+            }
+            else
+            {
+                _playerInRange = null;
+            }
+        }
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, _detectRadius);
     }
 }
 
