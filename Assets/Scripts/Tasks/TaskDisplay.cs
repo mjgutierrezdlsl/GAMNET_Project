@@ -8,6 +8,13 @@ public class TaskDisplay : Singleton<TaskDisplay>
     [SerializeField] private TextMeshProUGUI _taskDescription;
     Dictionary<TaskTrigger, TextMeshProUGUI> _taskList = new();
 
+    public void CreateEntry(string description, Color color = default)
+    {
+        var taskDescription = Instantiate(_taskDescription, _contentParent);
+        taskDescription.text = description;
+        taskDescription.color = color == default ? Color.white : color;
+    }
+
     public void CreateEntry(TaskTrigger taskTrigger)
     {
         var taskDescription = Instantiate(_taskDescription, _contentParent);
@@ -16,6 +23,7 @@ public class TaskDisplay : Singleton<TaskDisplay>
     }
     private void Update()
     {
+        // TODO: MOVE CHECKS OUT OF UPDATE
         foreach (var kvp in _taskList)
         {
             kvp.Value.color = kvp.Key.IsTaskComplete ? Color.green : Color.white;
