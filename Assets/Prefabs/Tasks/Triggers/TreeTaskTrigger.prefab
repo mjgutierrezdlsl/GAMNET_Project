@@ -156,6 +156,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _taskPanel: {fileID: 7846786283410476715, guid: cc098fee6ab833346bfbb871c337f3ab, type: 3}
+  <Description>k__BackingField: Cut down a tree.
   _onTaskComplete:
     m_PersistentCalls:
       m_Calls:

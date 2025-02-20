@@ -20,6 +20,7 @@ public class TaskManager : Singleton<TaskManager>
             var taskTrigger = Instantiate(_taskTriggerPrefabs[Random.Range(0, _taskTriggerPrefabs.Length)], _taskTriggerParent);
             taskTrigger.transform.position = transform.position + (Vector3)Random.insideUnitCircle * _spawnRadius;
             taskTrigger.Initialize(_taskPanelParent);
+            TaskDisplay.Instance.CreateEntry(taskTrigger);
         }
     }
 

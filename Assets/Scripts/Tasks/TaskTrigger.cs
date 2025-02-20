@@ -4,12 +4,13 @@ using UnityEngine.Events;
 public class TaskTrigger : MonoBehaviour
 {
     [SerializeField] private TaskPanel _taskPanel;
+    [field: SerializeField, TextArea] public string Description { get; private set; }
+    [SerializeField] private UnityEvent _onTaskComplete;
 
     private Transform _panelParent;
     private TaskPanel _panelInstance;
     private bool _isInitialized;
 
-    [SerializeField] private UnityEvent _onTaskComplete;
     public bool IsTaskComplete { get; private set; }
 
     public void Initialize(Transform panelParent)
