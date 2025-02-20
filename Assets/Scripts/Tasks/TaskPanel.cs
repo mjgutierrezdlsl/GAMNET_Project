@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Events;
 
 public abstract class TaskPanel : MonoBehaviour
 {
@@ -15,7 +16,7 @@ public abstract class TaskPanel : MonoBehaviour
             OnTaskComplete?.Invoke();
         }
     }
-    public event Action OnTaskComplete;
+    [SerializeField] private UnityEvent OnTaskComplete;
     public virtual void CompleteTask() => IsComplete = true;
     public virtual void ResetTask() => IsComplete = false;
 }

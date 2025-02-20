@@ -9,6 +9,8 @@ public class TaskTrigger : MonoBehaviour
     private Transform _panelParent;
     private bool _isInitialized;
 
+    public bool IsCompleted { get; private set; }
+
     public void Initialize(Transform panelParent)
     {
         _panelParent = panelParent;
