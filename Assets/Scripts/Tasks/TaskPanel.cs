@@ -14,9 +14,27 @@ public abstract class TaskPanel : MonoBehaviour
 
             if (!_isComplete) { return; }
             OnTaskComplete?.Invoke();
+            _onTaskComplete?.Invoke();
         }
     }
-    [SerializeField] private UnityEvent OnTaskComplete;
-    public virtual void CompleteTask() => IsComplete = true;
-    public virtual void ResetTask() => IsComplete = false;
+
+    [SerializeField] private UnityEvent _onTaskComplete;
+    public event Action OnTaskComplete;
+
+    public virtual void CompleteTask()
+    {
+        IsComplete = true;
+        Destroy(gameObject);
+    }
+
+    public void ClosePanel()
+    {
+        gameObject.SetActive(false);
+        ResetTask();
+    }
+
+    protected virtual void ResetTask()
+    {
+        IsComplete = false;
+    }
 }
