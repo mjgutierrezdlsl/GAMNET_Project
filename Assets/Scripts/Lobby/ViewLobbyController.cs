@@ -13,7 +13,7 @@ public class ViewLobbyController : MonoBehaviour
         RefreshLobbyList();
     }
 
-    private async void RefreshLobbyList()
+    public async void RefreshLobbyList()
     {
         // Clear existing entries
         ClearEntries();
@@ -22,7 +22,7 @@ public class ViewLobbyController : MonoBehaviour
         foreach (var lobby in lobbies.Results)
         {
             var entry = Instantiate(_lobbyEntryPrefab, _contentParent);
-            entry.Initialize(lobby.Name, lobby.AvailableSlots, lobby.MaxPlayers);
+            entry.Initialize(lobby);
             _lobbyEntries.Add(entry);
         }
     }

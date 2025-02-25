@@ -37,14 +37,15 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
-    private async void OnApplicationQuit()
+    private void OnApplicationQuit()
     {
         // Ensures that the lobbies are deleted once the player closes the game
-        var lobbies = await LobbyService.Instance.GetJoinedLobbiesAsync();
-        foreach (var lobby in lobbies)
-        {
-            await LobbyService.Instance.DeleteLobbyAsync(lobby);
-            print($"{lobby} deleted");
-        }
+        // var lobbies = await LobbyService.Instance.GetJoinedLobbiesAsync();
+        // foreach (var lobby in lobbies)
+        // {
+        //     await LobbyService.Instance.DeleteLobbyAsync(lobby);
+        //     print($"{lobby} deleted");
+        // }
+        StopAllCoroutines();
     }
 }
