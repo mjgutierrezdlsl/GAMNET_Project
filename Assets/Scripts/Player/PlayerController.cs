@@ -14,7 +14,7 @@ public class PlayerController : MonoBehaviour
     bool _isFacingLeft;
 
     PlayerController _playerInRange = null;
-    GameObject _taskInRange;
+    TaskTrigger _taskInRange;
 
 
     private bool _isDead;
@@ -62,12 +62,14 @@ public class PlayerController : MonoBehaviour
             {
                 //TODO: task.DoTask;
                 print(_taskInRange.name);
+                _taskInRange.ActivateTask();
             }
         }
 
         // Detect Player
         if (_playerInRange != null)
         {
+            print(_playerInRange.name);
             if (_playerInRange.IsDead)
             {
                 PlayerCorpseFound?.Invoke(this, _playerInRange);
@@ -108,19 +110,21 @@ public class PlayerController : MonoBehaviour
         var colliders = Physics2D.OverlapCircleAll(transform.position, _detectRadius);
         foreach (var collider in colliders)
         {
-            if (collider.CompareTag("Player") && collider.gameObject != this.gameObject)
+            if (collider.gameObject == this.gameObject) { continue; }
+
+            if (collider.CompareTag("Player"))
             {
-                print(collider.name);
                 _playerInRange = collider.GetComponent<PlayerController>();
                 // set highlight to player in range to red
             }
-            else if (collider.CompareTag("Task"))
+            else if (collider.CompareTag("TaskTrigger"))
             {
-                _taskInRange = collider.gameObject;
+                _taskInRange = collider.GetComponent<TaskTrigger>();
             }
             else
             {
                 _playerInRange = null;
+                _taskInRange = null;
             }
         }
 
