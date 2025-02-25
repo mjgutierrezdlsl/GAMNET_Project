@@ -1,38 +1,18 @@
+using System.Collections;
 using System.Collections.Generic;
-using Unity.Services.Lobbies;
 using UnityEngine;
 
 public class ViewLobbyController : MonoBehaviour
 {
-    [SerializeField] Transform _contentParent;
-    [SerializeField] LobbyEntry _lobbyEntryPrefab;
-    private List<LobbyEntry> _lobbyEntries = new();
-
-    private void OnEnable()
+    // Start is called before the first frame update
+    void Start()
     {
-        RefreshLobbyList();
+        
     }
 
-    public async void RefreshLobbyList()
+    // Update is called once per frame
+    void Update()
     {
-        // Clear existing entries
-        ClearEntries();
-
-        var lobbies = await LobbyService.Instance.QueryLobbiesAsync();
-        foreach (var lobby in lobbies.Results)
-        {
-            var entry = Instantiate(_lobbyEntryPrefab, _contentParent);
-            entry.Initialize(lobby);
-            _lobbyEntries.Add(entry);
-        }
-    }
-
-    private void ClearEntries()
-    {
-        for (int i = _lobbyEntries.Count - 1; i >= 0; i--)
-        {
-            Destroy(_lobbyEntries[i].gameObject);
-        }
-        _lobbyEntries.Clear();
+        
     }
 }
