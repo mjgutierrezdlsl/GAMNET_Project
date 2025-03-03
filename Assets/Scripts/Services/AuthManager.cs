@@ -7,16 +7,17 @@ using Unity.Services.Core;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class AuthManager : MonoBehaviour
+public class AuthManager : Singleton<AuthManager>
 {
     [SerializeField] private bool _autoSignIn;
     [SerializeField] private GameObject _authCanvas;
     [SerializeField] private TextMeshProUGUI _errorLogDisplay;
     [SerializeField] private UnityEvent _onSignIn;
 
+    public string PlayerName { get; private set; }
+
     private async void Start()
     {
-
         // Using the Lobby service requires the player
         // to be authenticated using Unity Authentication
         await UnityServices.InitializeAsync();
@@ -29,6 +30,7 @@ public class AuthManager : MonoBehaviour
 
                 // Signs in an anonymous player
                 await AuthenticationService.Instance.SignInAnonymouslyAsync();
+                PlayerName = await AuthenticationService.Instance.GetPlayerNameAsync();
                 _onSignIn?.Invoke();
             }
             catch (RequestFailedException err)
@@ -42,8 +44,8 @@ public class AuthManager : MonoBehaviour
         {
             _authCanvas.SetActive(true);
         }
-
     }
+
     public async void ConnectToServer(TMP_InputField nameInput)
     {
         try
@@ -78,10 +80,7 @@ public class AuthManager : MonoBehaviour
             _errorLogDisplay.gameObject.SetActive(true);
         };
 
-        AuthenticationService.Instance.SignedOut += () =>
-        {
-            Debug.Log("Player signed out.");
-        };
+        AuthenticationService.Instance.SignedOut += () => { Debug.Log("Player signed out."); };
 
         AuthenticationService.Instance.Expired += () =>
         {
@@ -93,8 +92,8 @@ public class AuthManager : MonoBehaviour
     {
         try
         {
-            var playerName = await AuthenticationService.Instance.UpdatePlayerNameAsync(nameInput);
-            print($"Player {AuthenticationService.Instance.PlayerId}'s name updated to {playerName}");
+            PlayerName = await AuthenticationService.Instance.UpdatePlayerNameAsync(nameInput);
+            print($"Player {AuthenticationService.Instance.PlayerId}'s name updated to {PlayerName}");
             _errorLogDisplay.gameObject.SetActive(false);
             _onSignIn?.Invoke();
         }
