@@ -14,9 +14,9 @@ GameObject:
   - component: {fileID: 5908781513169284608}
   - component: {fileID: 8473359939860138846}
   - component: {fileID: 3508028432974417076}
-  - component: {fileID: 396447367966255734}
-  - component: {fileID: 5021897803700700531}
-  - component: {fileID: 569604784979739767}
+  - component: {fileID: 7852200492457720303}
+  - component: {fileID: 5913918216552820509}
+  - component: {fileID: 7302653988769477952}
   - component: {fileID: 6231586495342408814}
   m_Layer: 0
   m_Name: Goblin_Torch
@@ -196,7 +196,7 @@ MonoBehaviour:
   SpawnWithObservers: 1
   DontDestroyWithOwner: 0
   AutoObjectParentSync: 1
---- !u!114 &396447367966255734
+--- !u!114 &7852200492457720303
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -205,12 +205,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 9021126060391394332}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e8d0727d5ae3244e3b569694d3912374, type: 3}
+  m_Script: {fileID: 11500000, guid: 5fe526b202e428a42b57caa6fb888dbd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   TransitionStateInfoList: []
   m_Animator: {fileID: 8428628420194749663}
---- !u!114 &5021897803700700531
+--- !u!114 &5913918216552820509
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -219,7 +219,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 9021126060391394332}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e96cb6065543e43c4a752faaa1468eb1, type: 3}
+  m_Script: {fileID: 11500000, guid: 09deea13e3e819047b6147dc23f9e3b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   UseUnreliableDeltas: 0
@@ -227,7 +227,7 @@ MonoBehaviour:
   SyncPositionY: 1
   SyncPositionZ: 1
   SyncRotAngleX: 0
-  SyncRotAngleY: 0
+  SyncRotAngleY: 1
   SyncRotAngleZ: 0
   SyncScaleX: 0
   SyncScaleY: 0
@@ -241,7 +241,7 @@ MonoBehaviour:
   InLocalSpace: 0
   Interpolate: 1
   SlerpPosition: 0
---- !u!114 &569604784979739767
+--- !u!114 &7302653988769477952
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
