@@ -1,143 +1,92 @@
-using System;
+using Unity.Netcode;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : NetworkBehaviour
 {
-    [SerializeField] float _moveSpeed = 2f;
-    [SerializeField] PlayerRole _role = PlayerRole.CREWMATE;
-    public float _detectRadius = 1.5f;
-
+    #region Role
+    [Header("Role")]
+    [SerializeField] private PlayerRole _role = PlayerRole.CREWMATE;
     public PlayerRole Role => _role;
 
-    InputHandler _inputHandler;
-    SpriteRenderer _spriteRenderer;
-    bool _isFacingLeft;
+    public void SetRole(PlayerRole role) => _role = role;
+    #endregion
 
-    PlayerController _playerInRange = null;
-    TaskTrigger _taskInRange;
+    #region Movement
+    [Header("Movement")]
+    [SerializeField] private float _moveSpeed = 2f;
+    private Rigidbody2D _rigidbody;
+    private Vector2 _moveDirection;
+    #endregion
 
-
-    private bool _isDead;
-    public bool IsDead
+    #region FaceDirection
+    private bool _isFacingLeft;
+    private void SetFaceDirection()
     {
-        get => _isDead;
-        set
+        if (_moveDirection.x < 0)
         {
-            _isDead = value;
-            if (_isDead)
-            {
-                OnDeath?.Invoke();
-            }
+            _isFacingLeft = true;
+        }
+        else if (_moveDirection.x > 0)
+        {
+            _isFacingLeft = false;
+        }
+        transform.rotation = Quaternion.Euler(_isFacingLeft ? Vector3.up * 180f : Vector3.zero);
+    }
+    #endregion
+
+    #region Animation
+    private Animator _animator;
+    private int _isMovingHashAnim = Animator.StringToHash("isMoving");
+    private int _attackHashAnim = Animator.StringToHash("attack");
+    private int _deadHashAnim = Animator.StringToHash("dead");
+
+    private void SetAnimationState(PlayerState state)
+    {
+        switch (state)
+        {
+            case PlayerState.IDLE:
+                _animator.SetBool(_isMovingHashAnim, false);
+                break;
+            case PlayerState.MOVE:
+                _animator.SetBool(_isMovingHashAnim, true);
+                break;
+            case PlayerState.ATTACK:
+                _animator.SetTrigger(_attackHashAnim);
+                break;
+            case PlayerState.DEAD:
+                _animator.SetTrigger(_deadHashAnim);
+                break;
         }
     }
-
-    public delegate void PlayerReportEvent(PlayerController reporter, PlayerController reported);
-    public PlayerReportEvent PlayerCorpseFound;
-
-    public event Action OnDeath;
-
-    public void SetRole(PlayerRole role) => _role = role;
+    #endregion
 
     private void Awake()
     {
-        _inputHandler = GetComponent<InputHandler>();
-        _spriteRenderer = GetComponent<SpriteRenderer>();
-    }
-    private void OnEnable()
-    {
-        _inputHandler.OnAttackPress += AttackPressed;
-    }
-    private void OnDisable()
-    {
-        _inputHandler.OnAttackPress -= AttackPressed;
-    }
-
-
-    private void AttackPressed()
-    {
-        // Detect Task
-        if (Role == PlayerRole.CREWMATE)
-        {
-            if (_taskInRange)
-            {
-                //TODO: task.DoTask;
-                print(_taskInRange.name);
-                _taskInRange.ActivateTask();
-            }
-        }
-
-        // Detect Player
-        if (_playerInRange != null)
-        {
-            print(_playerInRange.name);
-            if (_playerInRange.IsDead)
-            {
-                PlayerCorpseFound?.Invoke(this, _playerInRange);
-            }
-
-            if (Role == PlayerRole.IMPOSTOR)
-            {
-                if (_playerInRange.Role != PlayerRole.CREWMATE) { return; }
-                _playerInRange.KillPlayer();
-            }
-        }
-
-    }
-
-    public void KillPlayer()
-    {
-        GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Static;
-        IsDead = true;
+        _rigidbody = GetComponent<Rigidbody2D>();
+        _animator = GetComponent<Animator>();
     }
 
     private void Update()
     {
+        if (!IsOwner) { return; }
 
-        if (_isDead) return;
-
-        transform.Translate(_inputHandler.Direction * _moveSpeed * Time.deltaTime);
-        if (_inputHandler.Direction.x < 0)
-        {
-            _isFacingLeft = true;
-        }
-        else if (_inputHandler.Direction.x > 0)
-        {
-            _isFacingLeft = false;
-        }
-        _spriteRenderer.flipX = _isFacingLeft;
-
-        // Detect collisions every frame
-        var colliders = Physics2D.OverlapCircleAll(transform.position, _detectRadius);
-        foreach (var collider in colliders)
-        {
-            if (collider.gameObject == this.gameObject) { continue; }
-
-            if (collider.CompareTag("Player"))
-            {
-                _playerInRange = collider.GetComponent<PlayerController>();
-                // set highlight to player in range to red
-            }
-            else if (collider.CompareTag("TaskTrigger"))
-            {
-                _taskInRange = collider.GetComponent<TaskTrigger>();
-            }
-            else
-            {
-                _playerInRange = null;
-                _taskInRange = null;
-            }
-        }
-
+        _moveDirection = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).normalized;
+        SetAnimationState(_moveDirection != Vector2.zero ? PlayerState.MOVE : PlayerState.IDLE);
+        SetFaceDirection();
     }
 
-    private void OnDrawGizmos()
+    private void FixedUpdate()
     {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, _detectRadius);
+        _rigidbody.MovePosition(_rigidbody.position + _moveDirection * _moveSpeed * Time.fixedDeltaTime);
     }
 }
 
 public enum PlayerRole
 {
     CREWMATE, IMPOSTOR
+}
+
+public enum PlayerState
+{
+    IDLE, MOVE, ATTACK, DEAD
 }
