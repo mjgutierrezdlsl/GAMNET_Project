@@ -1,3 +1,4 @@
+using System;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -19,18 +20,46 @@ public class PlayerController : NetworkBehaviour
     #endregion
 
     #region FaceDirection
-    private bool _isFacingLeft;
+    private SpriteRenderer _spriteRenderer;
+
+    /// <summary>
+    /// Determines whether the client is facing left.
+    /// </summary>
+    /// <remarks>
+    /// The write permission is set to the Owner as we are only using this variable
+    /// to update the face direction of this client in the network.
+    /// </remarks>
+    private NetworkVariable<bool> _isFacingLeft = new(writePerm: NetworkVariableWritePermission.Owner);
+
+    /// <summary>
+    /// Sets the value of <see cref="_isFacingLeft"/> based on the <see cref="_moveDirection"/>.
+    /// </summary>
+    /// <remarks>
+    /// This setting of the variable only occurs locally.
+    /// </remarks>
     private void SetFaceDirection()
     {
         if (_moveDirection.x < 0)
         {
-            _isFacingLeft = true;
+            _isFacingLeft.Value = true;
         }
         else if (_moveDirection.x > 0)
         {
-            _isFacingLeft = false;
+            _isFacingLeft.Value = false;
         }
-        transform.rotation = Quaternion.Euler(_isFacingLeft ? Vector3.up * 180f : Vector3.zero);
+    }
+
+    /// <summary>
+    /// Triggers when we set a new value for <see cref="_isFacingLeft">.
+    /// </summary>
+    /// <param name="previousValue"></param>
+    /// <param name="newValue"></param>
+    /// <remarks>
+    /// This is where we adjust the spriteRenderer's flipX because this is synced across the network.
+    /// </remarks>
+    private void OnIsFacingLeftValueChanged(bool previousValue, bool newValue)
+    {
+        _spriteRenderer.flipX = newValue;
     }
     #endregion
 
@@ -64,6 +93,17 @@ public class PlayerController : NetworkBehaviour
     {
         _rigidbody = GetComponent<Rigidbody2D>();
         _animator = GetComponent<Animator>();
+        _spriteRenderer = GetComponent<SpriteRenderer>();
+    }
+    public override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
+        _isFacingLeft.OnValueChanged += OnIsFacingLeftValueChanged;
+    }
+    public override void OnNetworkDespawn()
+    {
+        base.OnNetworkDespawn();
+        _isFacingLeft.OnValueChanged -= OnIsFacingLeftValueChanged;
     }
 
     private void Update()
