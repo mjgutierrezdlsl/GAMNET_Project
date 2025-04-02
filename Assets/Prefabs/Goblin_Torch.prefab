@@ -18,7 +18,7 @@ GameObject:
   - component: {fileID: 5913918216552820509}
   - component: {fileID: 7302653988769477952}
   - component: {fileID: 6231586495342408814}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Goblin_Torch
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -266,4 +266,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _role: 0
+  _detectionRadius: 1
+  _playerLayer:
+    serializedVersion: 2
+    m_Bits: 64
   _moveSpeed: 2

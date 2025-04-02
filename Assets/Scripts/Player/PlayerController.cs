@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -6,10 +7,21 @@ public class PlayerController : NetworkBehaviour
 {
     #region Role
     [Header("Role")]
-    [SerializeField] private PlayerRole _role = PlayerRole.CREWMATE;
-    public PlayerRole Role => _role;
+    private NetworkVariable<PlayerRole> _role = new(PlayerRole.CREWMATE);
+    public PlayerRole Role => _role.Value;
 
-    public void SetRole(PlayerRole role) => _role = role;
+    public void SetRole(PlayerRole role) => _role.Value = role;
+    #endregion
+
+    #region State
+    private NetworkVariable<PlayerState> _state = new(PlayerState.IDLE, writePerm: NetworkVariableWritePermission.Server);
+    public PlayerState State => _state.Value;
+    #endregion
+
+    #region Detection
+    [Header("Detection")]
+    [SerializeField] private float _detectionRadius = 1.0f;
+    [SerializeField] private LayerMask _playerLayer;
     #endregion
 
     #region Movement
@@ -79,7 +91,7 @@ public class PlayerController : NetworkBehaviour
             case PlayerState.MOVE:
                 _animator.SetBool(_isMovingHashAnim, true);
                 break;
-            case PlayerState.ATTACK:
+            case PlayerState.INTERACT:
                 _animator.SetTrigger(_attackHashAnim);
                 break;
             case PlayerState.DEAD:
@@ -87,6 +99,11 @@ public class PlayerController : NetworkBehaviour
                 break;
         }
     }
+    #endregion
+
+    #region Events
+    public delegate void PlayerReportEvent(PlayerController reporter, PlayerController reported);
+    public event PlayerReportEvent CorpseFound;
     #endregion
 
     private void Awake()
@@ -98,35 +115,94 @@ public class PlayerController : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
+        PlayerManager.Instance.AddPlayer(this);
         _isFacingLeft.OnValueChanged += OnIsFacingLeftValueChanged;
+        _state.OnValueChanged += OnStateChanged;
     }
     public override void OnNetworkDespawn()
     {
         base.OnNetworkDespawn();
+        PlayerManager.Instance.RemovePlayer(this);
         _isFacingLeft.OnValueChanged -= OnIsFacingLeftValueChanged;
+        _state.OnValueChanged -= OnStateChanged;
+    }
+
+    private void OnStateChanged(PlayerState previousValue, PlayerState newValue)
+    {
+        SetAnimationState(newValue);
     }
 
     private void Update()
     {
         if (!IsOwner) { return; }
+        if (State == PlayerState.DEAD) { return; }
+
+        var colliders = Physics2D.OverlapCircleAll(transform.position, _detectionRadius, _playerLayer);
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            Collider2D nearestPlayer = null;
+            foreach (var collider in colliders)
+            {
+                if (collider.transform.root == transform) { continue; }
+                nearestPlayer = collider;
+                if (Vector3.Distance(transform.position, collider.transform.position) < Vector3.Distance(transform.position, nearestPlayer.transform.position))
+                {
+                    nearestPlayer = collider;
+                }
+            }
+
+            if (nearestPlayer == null) { return; }
+
+            if (nearestPlayer.TryGetComponent<PlayerController>(out var player))
+            {
+                // print($"Client {player.OwnerClientId}: {player.Role}");
+                switch (Role)
+                {
+                    case PlayerRole.CREWMATE:
+                        if (player.State == PlayerState.DEAD)
+                        {
+                            CorpseFound?.Invoke(this, player);
+                        }
+                        break;
+                    case PlayerRole.IMPOSTOR:
+                        KillVictimRpc(player.OwnerClientId);
+                        break;
+                }
+            }
+        }
 
         _moveDirection = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).normalized;
-        SetAnimationState(_moveDirection != Vector2.zero ? PlayerState.MOVE : PlayerState.IDLE);
+        // SetAnimationState(_moveDirection != Vector2.zero ? PlayerState.MOVE : PlayerState.IDLE);
+        UpdateStateRpc(_moveDirection != Vector2.zero ? PlayerState.MOVE : PlayerState.IDLE);
         SetFaceDirection();
     }
 
     private void FixedUpdate()
     {
+        if (_state.Value != PlayerState.MOVE) { return; }
         _rigidbody.MovePosition(_rigidbody.position + _moveDirection * _moveSpeed * Time.fixedDeltaTime);
     }
-}
 
-public enum PlayerRole
-{
-    CREWMATE, IMPOSTOR
-}
+    [Rpc(SendTo.Server)]
+    public void UpdateStateRpc(PlayerState state)
+    {
+        _state.Value = state;
+    }
 
-public enum PlayerState
-{
-    IDLE, MOVE, ATTACK, DEAD
+    [Rpc(SendTo.Everyone)]
+    public void KillVictimRpc(ulong clientId)
+    {
+        print($"Client {OwnerClientId} tried to kill {clientId}");
+        print($"Client {NetworkManager.LocalClientId} is {clientId}");
+        if (NetworkManager.LocalClientId == clientId)
+        {
+            UpdateStateRpc(PlayerState.DEAD);
+        }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, _detectionRadius);
+    }
 }
