@@ -121,9 +121,6 @@ public class PlayerController : NetworkBehaviour
         _spriteRenderer.flipX = _isFacingLeft.Value;
 
         if (!IsOwner) { return; }
-
-        UpdateStateRpc(_moveDirection != Vector2.zero ? PlayerState.MOVE : PlayerState.IDLE);
-
         if (State == PlayerState.DEAD) { return; }
 
         var colliders = Physics2D.OverlapCircleAll(transform.position, _detectionRadius, _playerLayer);
@@ -144,7 +141,6 @@ public class PlayerController : NetworkBehaviour
 
             if (nearestPlayer.TryGetComponent<PlayerController>(out var player))
             {
-                // print($"Client {player.OwnerClientId}: {player.Role}");
                 switch (Role)
                 {
                     case PlayerRole.CREWMATE:
@@ -161,7 +157,7 @@ public class PlayerController : NetworkBehaviour
         }
 
         _moveDirection = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).normalized;
-        // SetAnimationState(_moveDirection != Vector2.zero ? PlayerState.MOVE : PlayerState.IDLE);
+        UpdateStateRpc(_moveDirection != Vector2.zero ? PlayerState.MOVE : PlayerState.IDLE);
         SetFaceDirection();
     }
 
@@ -177,7 +173,7 @@ public class PlayerController : NetworkBehaviour
         _state.Value = state;
     }
 
-    [Rpc(SendTo.Everyone)]
+    [Rpc(SendTo.Server)]
     public void KillVictimRpc(ulong clientId)
     {
         foreach (var player in PlayerManager.Instance.PlayerList)
