@@ -4,6 +4,7 @@ using UnityEngine;
 public class PlayerManager : NetworkSingleton<PlayerManager>
 {
     private List<PlayerController> _playerList = new();
+    public PlayerController[] PlayerList => _playerList.ToArray();
     public void AddPlayer(PlayerController player)
     {
         _playerList.Add(player);

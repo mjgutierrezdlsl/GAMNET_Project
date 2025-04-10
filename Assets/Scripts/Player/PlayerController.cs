@@ -1,6 +1,5 @@
-using System;
-using System.Collections;
 using Unity.Netcode;
+using UnityEditor;
 using UnityEngine;
 
 public class PlayerController : NetworkBehaviour
@@ -122,6 +121,9 @@ public class PlayerController : NetworkBehaviour
         _spriteRenderer.flipX = _isFacingLeft.Value;
 
         if (!IsOwner) { return; }
+
+        UpdateStateRpc(_moveDirection != Vector2.zero ? PlayerState.MOVE : PlayerState.IDLE);
+
         if (State == PlayerState.DEAD) { return; }
 
         var colliders = Physics2D.OverlapCircleAll(transform.position, _detectionRadius, _playerLayer);
@@ -160,13 +162,12 @@ public class PlayerController : NetworkBehaviour
 
         _moveDirection = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).normalized;
         // SetAnimationState(_moveDirection != Vector2.zero ? PlayerState.MOVE : PlayerState.IDLE);
-        UpdateStateRpc(_moveDirection != Vector2.zero ? PlayerState.MOVE : PlayerState.IDLE);
         SetFaceDirection();
     }
 
     private void FixedUpdate()
     {
-        if (_state.Value != PlayerState.MOVE) { return; }
+        if (_state.Value == PlayerState.DEAD) { return; }
         _rigidbody.MovePosition(_rigidbody.position + _moveDirection * _moveSpeed * Time.fixedDeltaTime);
     }
 
@@ -179,11 +180,12 @@ public class PlayerController : NetworkBehaviour
     [Rpc(SendTo.Everyone)]
     public void KillVictimRpc(ulong clientId)
     {
-        print($"Client {OwnerClientId} tried to kill {clientId}");
-        print($"Client {NetworkManager.LocalClientId} is {clientId}");
-        if (NetworkManager.LocalClientId == clientId)
+        foreach (var player in PlayerManager.Instance.PlayerList)
         {
-            UpdateStateRpc(PlayerState.DEAD);
+            if (player.OwnerClientId == clientId)
+            {
+                player.UpdateStateRpc(PlayerState.DEAD);
+            }
         }
     }
 
@@ -191,5 +193,13 @@ public class PlayerController : NetworkBehaviour
     {
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, _detectionRadius);
+    }
+
+    private void OnDrawGizmos()
+    {
+#if UNITY_EDITOR
+        var system = IsServer ? "Server" : "Client";
+        Handles.Label(transform.position, $"Client {OwnerClientId} ({system})");
+#endif
     }
 }
