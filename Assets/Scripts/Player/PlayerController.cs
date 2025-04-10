@@ -60,19 +60,6 @@ public class PlayerController : NetworkBehaviour
             _isFacingLeft.Value = false;
         }
     }
-
-    /// <summary>
-    /// Triggers when we set a new value for <see cref="_isFacingLeft">.
-    /// </summary>
-    /// <param name="previousValue"></param>
-    /// <param name="newValue"></param>
-    /// <remarks>
-    /// This is where we adjust the spriteRenderer's flipX because this is synced across the network.
-    /// </remarks>
-    private void OnIsFacingLeftValueChanged(bool previousValue, bool newValue)
-    {
-        _spriteRenderer.flipX = newValue;
-    }
     #endregion
 
     #region Animation
@@ -116,14 +103,12 @@ public class PlayerController : NetworkBehaviour
     {
         base.OnNetworkSpawn();
         PlayerManager.Instance.AddPlayer(this);
-        _isFacingLeft.OnValueChanged += OnIsFacingLeftValueChanged;
         _state.OnValueChanged += OnStateChanged;
     }
     public override void OnNetworkDespawn()
     {
         base.OnNetworkDespawn();
         PlayerManager.Instance.RemovePlayer(this);
-        _isFacingLeft.OnValueChanged -= OnIsFacingLeftValueChanged;
         _state.OnValueChanged -= OnStateChanged;
     }
 
@@ -134,6 +119,8 @@ public class PlayerController : NetworkBehaviour
 
     private void Update()
     {
+        _spriteRenderer.flipX = _isFacingLeft.Value;
+
         if (!IsOwner) { return; }
         if (State == PlayerState.DEAD) { return; }
 
