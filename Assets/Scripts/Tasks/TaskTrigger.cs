@@ -2,7 +2,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class TaskTrigger : MonoBehaviour
+public class TaskTrigger : NetworkBehaviour
 {
     [SerializeField] private TaskPanel _taskPanel;
     [field: SerializeField, TextArea] public string Description { get; private set; }
@@ -30,12 +30,20 @@ public class TaskTrigger : MonoBehaviour
 
     public void ActivateTask()
     {
-        // if (!_isInitialized)
-        // {
-        //     Debug.LogWarning($"{name} is not initialized.");
-        //     return;
-        // }
-        // _panelInstance.gameObject.SetActive(true);
-        GetComponent<NetworkObject>().Despawn();
+        if (!_isInitialized)
+        {
+            Debug.LogWarning($"{name} is not initialized.");
+            return;
+        }
+        _panelInstance.gameObject.SetActive(true);
+    }
+
+    [Rpc(SendTo.Server)]
+    public void DespawnTriggerRpc()
+    {
+        if (IsServer)
+        {
+            GetComponent<NetworkObject>().Despawn();
+        }
     }
 }

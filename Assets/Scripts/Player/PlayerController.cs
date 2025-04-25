@@ -139,9 +139,7 @@ public class PlayerController : NetworkBehaviour
                 }
             }
 
-            if (nearestPlayer == null) { return; }
-
-            if (nearestPlayer.TryGetComponent<PlayerController>(out var player))
+            if (nearestPlayer != null && nearestPlayer.TryGetComponent<PlayerController>(out var player))
             {
                 switch (Role)
                 {
@@ -161,6 +159,7 @@ public class PlayerController : NetworkBehaviour
         taskTriggerColliders = Physics2D.OverlapCircleAll(transform.position, _detectionRadius, _taskTriggerLayer);
         if (Input.GetKeyDown(KeyCode.E))
         {
+            print("Checking for task");
             Collider2D nearestTrigger = null;
             foreach (var collider in taskTriggerColliders)
             {
@@ -172,12 +171,10 @@ public class PlayerController : NetworkBehaviour
                 }
             }
 
-            if (nearestTrigger == null) { return; }
-
-            if (nearestTrigger.TryGetComponent<TaskTrigger>(out var taskTrigger))
+            if (nearestTrigger != null && nearestTrigger.TryGetComponent<TaskTrigger>(out var taskTrigger))
             {
                 print("Activating task...");
-                taskTrigger.ActivateTask();
+                taskTrigger.DespawnTriggerRpc();
             }
         }
 
