@@ -155,7 +155,7 @@ MonoBehaviour:
   NetworkConfig:
     ProtocolVersion: 0
     NetworkTransport: {fileID: 54518458}
-    PlayerPrefab: {fileID: 9021126060391394332, guid: 5aa12a9e57c5347cc8abcbc3fb8452d6, type: 3}
+    PlayerPrefab: {fileID: 0}
     Prefabs:
       NetworkPrefabsLists:
       - {fileID: 11400000, guid: f5eb0169225b07f438018f974d0b9b13, type: 2}
@@ -363,6 +363,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _networkSystemLabel: {fileID: 483593776}
+  _gameStart:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &483593774
 GameObject:
   m_ObjectHideFlags: 0
@@ -791,6 +794,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isPersistent: 0
+  _playerPrefab: {fileID: 6231586495342408814, guid: 5aa12a9e57c5347cc8abcbc3fb8452d6, type: 3}
 --- !u!1 &1633067661
 GameObject:
   m_ObjectHideFlags: 0

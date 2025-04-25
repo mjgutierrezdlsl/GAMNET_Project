@@ -194,8 +194,7 @@ public class PlayerController : NetworkBehaviour
     private void OnDrawGizmos()
     {
 #if UNITY_EDITOR
-        var system = IsServer ? "Server" : "Client";
-        Handles.Label(transform.position, $"Client {OwnerClientId} ({system})");
+        Handles.Label(transform.position, $"Client {OwnerClientId} ({Role})\n{State}");
 #endif
     }
 }

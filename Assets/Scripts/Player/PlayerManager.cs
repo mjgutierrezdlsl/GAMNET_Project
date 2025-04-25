@@ -1,10 +1,24 @@
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 public class PlayerManager : NetworkSingleton<PlayerManager>
 {
+    [SerializeField] PlayerController _playerPrefab;
     private List<PlayerController> _playerList = new();
     public PlayerController[] PlayerList => _playerList.ToArray();
+    private void Start()
+    {
+        NetworkManager.OnClientConnectedCallback += OnClientConnected;
+    }
+
+    private void OnClientConnected(ulong obj)
+    {
+        if (!IsServer) { return; }
+        var player = Instantiate(_playerPrefab, transform.position + (Vector3)Random.insideUnitCircle * 3f, Quaternion.identity);
+        player.GetComponent<NetworkObject>().SpawnAsPlayerObject(obj);
+    }
+
     public void AddPlayer(PlayerController player)
     {
         _playerList.Add(player);
