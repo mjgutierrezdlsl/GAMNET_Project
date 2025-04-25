@@ -21,6 +21,8 @@ public class PlayerController : NetworkBehaviour
     [Header("Detection")]
     [SerializeField] private float _detectionRadius = 1.0f;
     [SerializeField] private LayerMask _playerLayer;
+    [SerializeField] private LayerMask _taskTriggerLayer;
+    [SerializeField] private Collider2D[] taskTriggerColliders;
     #endregion
 
     #region Movement
@@ -123,11 +125,11 @@ public class PlayerController : NetworkBehaviour
         if (!IsOwner) { return; }
         if (State == PlayerState.DEAD) { return; }
 
-        var colliders = Physics2D.OverlapCircleAll(transform.position, _detectionRadius, _playerLayer);
+        var playerColliders = Physics2D.OverlapCircleAll(transform.position, _detectionRadius, _playerLayer);
         if (Input.GetKeyDown(KeyCode.E))
         {
             Collider2D nearestPlayer = null;
-            foreach (var collider in colliders)
+            foreach (var collider in playerColliders)
             {
                 if (collider.transform.root == transform) { continue; }
                 nearestPlayer = collider;
@@ -155,6 +157,30 @@ public class PlayerController : NetworkBehaviour
                 }
             }
         }
+
+        taskTriggerColliders = Physics2D.OverlapCircleAll(transform.position, _detectionRadius, _taskTriggerLayer);
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            Collider2D nearestTrigger = null;
+            foreach (var collider in taskTriggerColliders)
+            {
+                if (collider.transform.root == transform) { continue; }
+                nearestTrigger = collider;
+                if (Vector3.Distance(transform.position, collider.transform.position) < Vector3.Distance(transform.position, nearestTrigger.transform.position))
+                {
+                    nearestTrigger = collider;
+                }
+            }
+
+            if (nearestTrigger == null) { return; }
+
+            if (nearestTrigger.TryGetComponent<TaskTrigger>(out var taskTrigger))
+            {
+                print("Activating task...");
+                taskTrigger.ActivateTask();
+            }
+        }
+
 
         _moveDirection = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).normalized;
         UpdateStateRpc(_moveDirection != Vector2.zero ? PlayerState.MOVE : PlayerState.IDLE);

@@ -1,8 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Netcode;
 using UnityEngine;
 
-public class TaskManager : Singleton<TaskManager>
+public class TaskManager : NetworkSingleton<TaskManager>
 {
     [SerializeField] private Transform _taskPanelParent;
     [SerializeField] private Transform _taskTriggerParent;
@@ -14,7 +15,19 @@ public class TaskManager : Singleton<TaskManager>
 
     private void Start()
     {
-        SpawnTasks();
+        NetworkManager.OnClientConnectedCallback += OnClientConnected;
+    }
+
+    private void OnClientConnected(ulong id)
+    {
+        print($"Client {id} connected");
+        if (IsServer)
+        {
+            SpawnTasks();
+            // Unsubscribe from event to prevent spawning multiple times
+            NetworkManager.OnClientConnectedCallback -= OnClientConnected;
+        }
+
     }
 
     public void SpawnTasks()
@@ -24,8 +37,9 @@ public class TaskManager : Singleton<TaskManager>
             var taskTrigger = Instantiate(_taskTriggerPrefabs[Random.Range(0, _taskTriggerPrefabs.Length)], _taskTriggerParent);
             taskTrigger.transform.position = transform.position + (Vector3)Random.insideUnitCircle * _spawnRadius;
             taskTrigger.Initialize(_taskPanelParent);
-            TaskDisplay.Instance.CreateEntry(taskTrigger);
+            // TaskDisplay.Instance.CreateEntry(taskTrigger);
             _taskTriggers.Add(taskTrigger);
+            taskTrigger.GetComponent<NetworkObject>().Spawn();
         }
     }
 

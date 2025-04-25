@@ -1,3 +1,4 @@
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -29,11 +30,12 @@ public class TaskTrigger : MonoBehaviour
 
     public void ActivateTask()
     {
-        if (!_isInitialized)
-        {
-            Debug.LogWarning($"{name} is not initialized.");
-            return;
-        }
-        _panelInstance.gameObject.SetActive(true);
+        // if (!_isInitialized)
+        // {
+        //     Debug.LogWarning($"{name} is not initialized.");
+        //     return;
+        // }
+        // _panelInstance.gameObject.SetActive(true);
+        GetComponent<NetworkObject>().Despawn();
     }
 }
