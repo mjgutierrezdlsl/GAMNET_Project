@@ -1,8 +1,10 @@
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 public class PlayerManager : NetworkSingleton<PlayerManager>
 {
+    [SerializeField] PlayerController _playerPrefab;
     private List<PlayerController> _playerList = new();
     public PlayerController[] PlayerList => _playerList.ToArray();
     public void AddPlayer(PlayerController player)
@@ -26,9 +28,23 @@ public class PlayerManager : NetworkSingleton<PlayerManager>
         }
         print($"Client {impostor.OwnerClientId} set as impostor");
     }
+
+    private void SpawnPlayer(ulong id)
+    {
+        var player = Instantiate(_playerPrefab, transform.position + (Vector3)Random.insideUnitCircle, Quaternion.identity);
+        player.GetComponent<NetworkObject>().SpawnAsPlayerObject(id);
+    }
+
     private void Update()
     {
         if (!IsServer) { return; }
+        // if (Input.GetKeyDown(KeyCode.Space))
+        // {
+        //     foreach (var id in NetworkManager.ConnectedClientsIds)
+        //     {
+        //         SpawnPlayer(id);
+        //     }
+        // }
         if (Input.GetKeyDown(KeyCode.Q))
         {
             SetImpostor();

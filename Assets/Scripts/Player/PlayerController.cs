@@ -21,6 +21,7 @@ public class PlayerController : NetworkBehaviour
     [Header("Detection")]
     [SerializeField] private float _detectionRadius = 1.0f;
     [SerializeField] private LayerMask _playerLayer;
+    [SerializeField] private LayerMask _taskTriggerLayer;
     #endregion
 
     #region Movement
@@ -137,9 +138,8 @@ public class PlayerController : NetworkBehaviour
                 }
             }
 
-            if (nearestPlayer == null) { return; }
 
-            if (nearestPlayer.TryGetComponent<PlayerController>(out var player))
+            if (nearestPlayer != null && nearestPlayer.TryGetComponent<PlayerController>(out var player))
             {
                 switch (Role)
                 {
@@ -153,6 +153,27 @@ public class PlayerController : NetworkBehaviour
                         KillVictimRpc(player.OwnerClientId);
                         break;
                 }
+            }
+        }
+
+        var taskTriggerColliders = Physics2D.OverlapCircleAll(transform.position, _detectionRadius, _taskTriggerLayer);
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            Collider2D nearestTask = null;
+            foreach (var collider in taskTriggerColliders)
+            {
+                if (collider.transform.root == transform) { continue; }
+                nearestTask = collider;
+                if (Vector3.Distance(transform.position, collider.transform.position) < Vector3.Distance(transform.position, nearestTask.transform.position))
+                {
+                    nearestTask = collider;
+                }
+            }
+
+
+            if (nearestTask != null && nearestTask.TryGetComponent<TaskTrigger>(out var task))
+            {
+                task.DespawnTaskRpc();
             }
         }
 

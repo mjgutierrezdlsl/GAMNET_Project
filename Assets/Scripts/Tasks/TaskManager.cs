@@ -1,8 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Unity.Netcode;
 
-public class TaskManager : Singleton<TaskManager>
+public class TaskManager : NetworkSingleton<TaskManager>
 {
     [SerializeField] private Transform _taskPanelParent;
     [SerializeField] private Transform _taskTriggerParent;
@@ -14,18 +15,27 @@ public class TaskManager : Singleton<TaskManager>
 
     private void Start()
     {
+        NetworkManager.OnServerStarted += OnServerStarted;
+    }
+
+    private void OnServerStarted()
+    {
         SpawnTasks();
+        NetworkManager.OnServerStarted -= OnServerStarted;
     }
 
     public void SpawnTasks()
     {
+        print("Spawning Tasks...");
         for (int i = 0; i < _taskCount; i++)
         {
-            var taskTrigger = Instantiate(_taskTriggerPrefabs[Random.Range(0, _taskTriggerPrefabs.Length)], _taskTriggerParent);
+            var prefab = _taskTriggerPrefabs[Random.Range(0, _taskTriggerPrefabs.Length)];
+            var taskTrigger = Instantiate(prefab, _taskTriggerParent);
             taskTrigger.transform.position = transform.position + (Vector3)Random.insideUnitCircle * _spawnRadius;
-            taskTrigger.Initialize(_taskPanelParent);
-            TaskDisplay.Instance.CreateEntry(taskTrigger);
-            _taskTriggers.Add(taskTrigger);
+            // taskTrigger.Initialize(_taskPanelParent);
+            // TaskDisplay.Instance.CreateEntry(taskTrigger);
+            // _taskTriggers.Add(taskTrigger);
+            taskTrigger.GetComponent<NetworkObject>().Spawn();
         }
     }
 

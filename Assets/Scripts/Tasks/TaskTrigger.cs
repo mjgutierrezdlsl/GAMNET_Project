@@ -1,7 +1,8 @@
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class TaskTrigger : MonoBehaviour
+public class TaskTrigger : NetworkBehaviour
 {
     [SerializeField] private TaskPanel _taskPanel;
     [field: SerializeField, TextArea] public string Description { get; private set; }
@@ -35,5 +36,14 @@ public class TaskTrigger : MonoBehaviour
             return;
         }
         _panelInstance.gameObject.SetActive(true);
+    }
+
+    [Rpc(SendTo.Server)]
+    public void DespawnTaskRpc()
+    {
+        if (IsServer)
+        {
+            GetComponent<NetworkObject>().Despawn();
+        }
     }
 }
